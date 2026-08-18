@@ -34,6 +34,8 @@ jobs:
           nuitka-version: main
           script-name: mpv_websocket_subs/WS_subs.py
           mode: standalone
+          include-package: websockets
+          include-module: python_mpv_jsonipc
 
       - name: Move dist files
         run: mv build/WS_subs.dist mpv_websocket_subs/bin
