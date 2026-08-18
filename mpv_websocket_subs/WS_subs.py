@@ -1,0 +1,107 @@
+import asyncio
+
+# import os
+import json
+import sys
+
+import websockets
+from python_mpv_jsonipc import MPV
+
+# from typing import Any
+
+# import logging
+
+# logger = logging.getLogger("websockets")
+# logger.setLevel(logging.DEBUG)
+# logger.addHandler(logging.StreamHandler())
+
+connections = set()
+secondary = False
+
+
+async def echo(websocket: websockets.ServerConnection) -> None:
+    connections.add(websocket)
+    mpv.show_text("Connected")
+    try:
+        async for message in websocket:
+            print(message)
+            if message == "stopServer":
+                mpv.terminate()
+                sys.exit()
+    except websockets.ConnectionClosed:
+        print("Client disconnected")
+        mpv.show_text("Client disconnected")
+    finally:
+        connections.remove(websocket)
+
+
+def send_subs(name: str, value: str) -> None:
+    if not value:
+        return
+    if connections:
+        temp = json.dumps({"sentence": value})
+        # try:
+        loop.call_soon_threadsafe(mpvQ.put_nowait, temp)
+        # except Exception:
+        #     pass
+
+
+async def monitorQ(queue: asyncio.Queue) -> None:
+    while True:
+        msg = await queue.get()
+        for websocket in connections.copy():
+            try:
+                await websocket.send(msg)
+            except websockets.ConnectionClosed:  # noqa: PERF203
+                connections.discard(websocket)
+
+
+async def check_connection() -> None:
+    while True:
+        try:
+            mpv.command("client_name")
+            await asyncio.sleep(5)
+        except BrokenPipeError:  # noqa: PERF203
+            print("Connection to mpv dropped. Terminating script...")
+            mpv.terminate()
+            sys.exit()
+
+SOCKET = sys.argv[1]
+mpvQ = asyncio.Queue()
+
+mpv = MPV(start_mpv=False, ipc_socket=SOCKET)
+
+if secondary:
+    mpv.bind_property_observer("secondary-sub-text", send_subs)
+else:
+    mpv.bind_property_observer("sub-text", send_subs)
+
+loop: asyncio.AbstractEventLoop # = None
+# task = None
+
+
+async def main() -> None:
+    global loop #, mpvQ, task  # noqa: PLW0603
+
+    loop = asyncio.get_event_loop()
+
+    try:
+        async with websockets.serve(echo, "localhost", 6677):
+
+            mpv.show_text("WS_subs started. Connect from browser.", 60000)
+            # mpvQ = asyncio.Queue()
+            # main_task = asyncio.create_task(monitorQ(mpvQ))
+            main_task = asyncio.gather(monitorQ(mpvQ), check_connection())
+            mpv.quit_callback = main_task.cancel
+            try:  # noqa: SIM105
+                await main_task
+            except asyncio.CancelledError:
+                pass
+            mpv.terminate()
+
+    except OSError as error:
+        print(error.strerror)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
