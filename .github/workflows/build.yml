@@ -1,0 +1,57 @@
+name: Build Standalone
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-15-intel, macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install Dependencies
+        run: |
+          pip install -r mpv_websocket_subs/requirements.txt
+
+      - name: Build Executable
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: mpv_websocket_subs/WS_subs.py
+          mode: standalone
+
+      - name: Move dist files
+        run: mv build/WS_subs.dist mpv_websocket_subs/bin
+
+      - name: Remove build files
+        run: rm -r build
+
+      - name: Install pip-licenses
+        run: pip install pip-licenses
+
+      - name: Generate THIRDPARTY_LICENSES FILE
+        run: pip-licenses --format=plain-vertical --with-license-file --no-license-path --output-file=THIRDPARTY_LICENSES.txt --ignore-packages zstandard Nuitka ordered-set
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }} ${{ runner.arch }} Build
+          path: |
+              .
+              !./.*
+          include-hidden-files: false
