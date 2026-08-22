@@ -16,10 +16,10 @@ from python_mpv_jsonipc import MPV
 # logger.addHandler(logging.StreamHandler())
 
 connections = set()
-secondary = False
+secondary = len(sys.argv) > 2 and sys.argv[2] == "secondary"
 
 
-async def echo(websocket: websockets.ServerConnection) -> None:
+async def handler(websocket: websockets.ServerConnection) -> None:
     connections.add(websocket)
     mpv.show_text("Connected")
     try:
@@ -52,7 +52,7 @@ async def monitorQ(queue: asyncio.Queue) -> None:
         for websocket in connections.copy():
             try:
                 await websocket.send(msg)
-            except websockets.ConnectionClosed:  # noqa: PERF203
+            except websockets.ConnectionClosed:
                 connections.discard(websocket)
 
 
@@ -61,7 +61,7 @@ async def check_connection() -> None:
         try:
             mpv.command("client_name")
             await asyncio.sleep(5)
-        except BrokenPipeError:  # noqa: PERF203
+        except BrokenPipeError:
             print("Connection to mpv dropped. Terminating script...")
             mpv.terminate()
             sys.exit()
@@ -86,7 +86,7 @@ async def main() -> None:
     loop = asyncio.get_event_loop()
 
     try:
-        async with websockets.serve(echo, "localhost", 6677):
+        async with websockets.serve(handler, "localhost", 6677):
 
             mpv.show_text("WS_subs started. Connect from browser.", 60000)
             # mpvQ = asyncio.Queue()

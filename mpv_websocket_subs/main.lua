@@ -32,7 +32,7 @@ if custom_python_cmd then
   python_cmd = custom_python_cmd
 end
 
-local function startScript()
+local function startScript(secondary)
   if running then
       mp.abort_async_command(runScript)
   else
@@ -58,6 +58,12 @@ local function startScript()
 
     table.insert(arguments, mp.get_property_native("input-ipc-server"))
 
+    if secondary then
+      table.insert(arguments, "secondary")
+    end
+
+    mp.osd_message("Loading WS_subs script...", 2)
+
     runScript = mp.command_native_async({
         name = "subprocess",
         playback_only = false,
@@ -72,4 +78,10 @@ local function startScript()
   end
 end
 
-mp.add_key_binding("CTRL+ALT+w", "startWS_subs", startScript)
+mp.add_key_binding("CTRL+ALT+w", "startWS_subs", function ()
+  startScript(false)
+end)
+
+mp.add_key_binding("CTRL+ALT+e", "startWS_secondary_subs", function ()
+  startScript(true)
+end)
