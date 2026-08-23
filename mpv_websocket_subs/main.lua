@@ -1,5 +1,11 @@
 local utils = require 'mp.utils'
 
+local options = {
+  custom_json_schema = "",
+}
+
+require "mp.options".read_options(options)
+
 local script_path = utils.join_path(mp.get_script_directory(), "WS_subs.py")
 local running = false
 local old_ipc_server = mp.get_property_native("input-ipc-server")
@@ -10,14 +16,14 @@ local default_venv_bin
 local bin_path
 local runScript
 
-if package.config:sub(1,1) == '/' then
+if package.config:sub(1, 1) == '/' then
   python_cmd = "python3"
   bin_path = utils.join_path(mp.get_script_directory(), "bin/WS_subs.bin")
-  default_venv_bin = mp.command_native({"expand-path", "~~/.mpv_venv/bin/python"})
+  default_venv_bin = mp.command_native({ "expand-path", "~~/.mpv_venv/bin/python" })
 else
   python_cmd = "py"
   bin_path = utils.join_path(mp.get_script_directory(), "bin/WS_subs.exe")
-  default_venv_bin = mp.command_native({"expand-path", "~~/.mpv_venv/Scripts/python.exe"})
+  default_venv_bin = mp.command_native({ "expand-path", "~~/.mpv_venv/Scripts/python.exe" })
 end
 
 if utils.file_info(bin_path) == nil then
@@ -34,7 +40,7 @@ end
 
 local function startScript(secondary)
   if running then
-      mp.abort_async_command(runScript)
+    mp.abort_async_command(runScript)
   else
     running = true
     old_ipc_server = mp.get_property_native("input-ipc-server")
@@ -56,10 +62,16 @@ local function startScript(secondary)
       }
     end
 
+    table.insert(arguments, "--socket")
     table.insert(arguments, mp.get_property_native("input-ipc-server"))
 
     if secondary then
-      table.insert(arguments, "secondary")
+      table.insert(arguments, "--secondary")
+    end
+
+    if #options.custom_json_schema > 0 then
+      table.insert(arguments, "--schema")
+      table.insert(arguments, options.custom_json_schema)
     end
 
     mp.osd_message("Loading WS_subs script...", 2)
@@ -70,18 +82,18 @@ local function startScript(secondary)
         args = arguments,
       },
       function(res, val, err)
-          mp.osd_message("WS_subs script has stopped", 2)
-          -- mp.set_property("input-ipc-server", old_ipc_server)
-          running = false
+        mp.osd_message("WS_subs script has stopped", 2)
+        -- mp.set_property("input-ipc-server", old_ipc_server)
+        running = false
       end
     )
   end
 end
 
-mp.add_key_binding("CTRL+ALT+w", "startWS_subs", function ()
+mp.add_key_binding("CTRL+ALT+w", "startWS_subs", function()
   startScript(false)
 end)
 
-mp.add_key_binding("CTRL+ALT+e", "startWS_secondary_subs", function ()
+mp.add_key_binding("CTRL+ALT+e", "startWS_secondary_subs", function()
   startScript(true)
 end)

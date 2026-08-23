@@ -1,8 +1,8 @@
+import argparse
 import asyncio
-
-# import os
 import json
 import sys
+import time
 
 import websockets
 from python_mpv_jsonipc import MPV
@@ -15,9 +15,17 @@ from python_mpv_jsonipc import MPV
 # logger.setLevel(logging.DEBUG)
 # logger.addHandler(logging.StreamHandler())
 
-connections = set()
-secondary = len(sys.argv) > 2 and sys.argv[2] == "secondary"
+parser = argparse.ArgumentParser()
+parser.add_argument("--socket")
+parser.add_argument("--secondary", action="store_true", default=False)
+parser.add_argument("--schema", default=None) # example: '{"sentence": "{subs}"}' where {subs} is the value received from mpv
 
+args = parser.parse_args()
+SOCKET = args.socket
+secondary = args.secondary
+custom_subs_json: str | None = args.schema
+
+connections = set()
 
 async def handler(websocket: websockets.ServerConnection) -> None:
     connections.add(websocket)
@@ -39,11 +47,8 @@ def send_subs(name: str, value: str) -> None:
     if not value:
         return
     if connections:
-        temp = json.dumps({"sentence": value})
-        # try:
+        temp = custom_subs_json.replace("{subs}", value) if custom_subs_json is not None else value
         loop.call_soon_threadsafe(mpvQ.put_nowait, temp)
-        # except Exception:
-        #     pass
 
 
 async def monitorQ(queue: asyncio.Queue) -> None:
@@ -66,10 +71,19 @@ async def check_connection() -> None:
             mpv.terminate()
             sys.exit()
 
-SOCKET = sys.argv[1]
 mpvQ = asyncio.Queue()
 
 mpv = MPV(start_mpv=False, ipc_socket=SOCKET)
+
+if custom_subs_json is not None:
+    try:
+        json.loads(custom_subs_json)
+    except json.JSONDecodeError:
+        print(f"Custom JSON schema '{custom_subs_json}' is not valid", flush=True)
+        mpv.show_text(f"Custom JSON schema '{custom_subs_json}' is not valid")
+        time.sleep(5)
+        mpv.terminate()
+        sys.exit()
 
 if secondary:
     mpv.bind_property_observer("secondary-sub-text", send_subs)
