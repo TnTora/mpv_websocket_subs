@@ -1,6 +1,6 @@
 # mpv_websocket_subs
 
-mpv script to send subtitles via a websocket server. Useful to send subs to a texthooker like [texthooker-ui]() or the one included in my other project [Jiku]().
+mpv script to send subtitles via a websocket server. Useful to send subs to a texthooker like [texthooker-ui]() or the one included in my other project [Jiku](https://github.com/TnTora/Jiku).
 
 ### Demo
 
