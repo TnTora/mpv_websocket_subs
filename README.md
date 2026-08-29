@@ -46,15 +46,17 @@ pip install -r requirement.txt
 
 ## Usage
 
-On mpv, use the keybinding `Ctrl+Alt+w` to start the script and then follow the instruction on screen.
+On mpv, use the keybinding `CTRL+ALT+w` to start the script and then follow the instruction on screen.\
+If you want to send secondary subs instead use `CTRL+ALT+e`.
 
 Press the same keybinding to stop the script from running.
 
-To change the keybinding add the following line to your `input.conf` file after replacing `Ctrl+Alt+w` with whatever you prefer
+To change the keybinding add the following lines to your `input.conf` file after replacing `CTRL+ALT+w` and `CTRL+ALT+e` with whatever you prefer
 
 ```
 # mpv_websocket_subs
-Ctrl+Alt+w             script-binding mpv_websocket_subs/startWS_subs
+CTRL+ALT+w             script-binding mpv_websocket_subs/startWS_subs
+CTRL+ALT+e             script-binding mpv_websocket_subs/startWS_secondary_subs
 ```
 
 > **NOTE: If you are not using the [standard mpv build](https://mpv.io/installation/), your player might ignore the `input.conf` file (e.g. [mpv.net](https://github.com/mpvnet-player/mpv.net), [IINA](https://iina.io/)) so you might need to use the in-app options to set the keybindings.**
