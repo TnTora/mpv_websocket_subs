@@ -2,6 +2,7 @@ local utils = require 'mp.utils'
 
 local options = {
   custom_json_schema = "",
+  port = 6677,
 }
 
 require "mp.options".read_options(options)
@@ -73,6 +74,9 @@ local function startScript(secondary)
       table.insert(arguments, "--schema")
       table.insert(arguments, options.custom_json_schema)
     end
+
+    table.insert(arguments, "--port")
+    table.insert(arguments, tostring(options.port))
 
     mp.osd_message("Loading WS_subs script...", 2)
 

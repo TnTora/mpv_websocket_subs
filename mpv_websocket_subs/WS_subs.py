@@ -19,11 +19,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--socket")
 parser.add_argument("--secondary", action="store_true", default=False)
 parser.add_argument("--schema", default=None) # example: '{"sentence": "{subs}"}' where {subs} is the value received from mpv
+parser.add_argument("--port", type=int, default=6677)
 
 args = parser.parse_args()
 SOCKET = args.socket
 secondary = args.secondary
 custom_subs_json: str | None = args.schema
+PORT: int = args.port
 
 connections = set()
 
@@ -91,16 +93,15 @@ else:
     mpv.bind_property_observer("sub-text", send_subs)
 
 loop: asyncio.AbstractEventLoop # = None
-# task = None
 
 
 async def main() -> None:
-    global loop #, mpvQ, task  # noqa: PLW0603
+    global loop # noqa: PLW0603
 
     loop = asyncio.get_event_loop()
 
     try:
-        async with websockets.serve(handler, "localhost", 6677):
+        async with websockets.serve(handler, "localhost", PORT):
 
             mpv.show_text("WS_subs started. Connect from browser.", 60000)
             # mpvQ = asyncio.Queue()
