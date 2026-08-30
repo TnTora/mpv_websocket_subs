@@ -49,6 +49,8 @@ pip install -r requirement.txt
 On mpv, use the keybinding `CTRL+ALT+w` to start the script and then follow the instruction on screen.\
 If you want to send secondary subs instead use `CTRL+ALT+e`.
 
+By default, the server will be available at `ws://localhost:6677` and will send subtitles as raw text. To change the port or the formatting of the subtitles, check the `options` section below.
+
 Press the same keybinding to stop the script from running.
 
 To change the keybinding add the following lines to your `input.conf` file after replacing `CTRL+ALT+w` and `CTRL+ALT+e` with whatever you prefer
@@ -60,6 +62,24 @@ CTRL+ALT+e             script-binding mpv_websocket_subs/startWS_secondary_subs
 ```
 
 > **NOTE: If you are not using the [standard mpv build](https://mpv.io/installation/), your player might ignore the `input.conf` file (e.g. [mpv.net](https://github.com/mpvnet-player/mpv.net), [IINA](https://iina.io/)) so you might need to use the in-app options to set the keybindings.**
+
+## Options
+
+To customise options, create a file called `mpv_websocket_subs.conf` and place it in `<mpv config directory>/script-opts`.
+
+| option | description | default |
+| -------|-------------|---------|
+| port | Websocket server port | 6677 |
+| custom_json_schema | Format used to send subtitles,  `{subs}` is the placeholder for the actual subtitle value | "" (raw string) |
+
+
+Here is an example of the conf file contents. Delete a line or comment it out with a `#` at the beginning of the line to use the default value.
+
+```
+custom_json_schema={"sentence": "{subs}"}
+port=8000
+```
+
 
 ## Dependencies
 | Name | LICENSE |
