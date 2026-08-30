@@ -78,7 +78,7 @@ local function startScript(secondary)
     table.insert(arguments, "--port")
     table.insert(arguments, tostring(options.port))
 
-    mp.osd_message("Loading WS_subs script...", 2)
+    mp.osd_message("Loading WS_subs script...", 6000)
 
     runScript = mp.command_native_async({
         name = "subprocess",
