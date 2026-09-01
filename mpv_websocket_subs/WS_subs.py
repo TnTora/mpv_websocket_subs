@@ -27,6 +27,19 @@ secondary = args.secondary
 custom_subs_json: str | None = args.schema
 PORT: int = args.port
 
+template: dict | None = None
+template_subs_key = None
+
+def get_template_key(template):
+    if not isinstance(template, dict):
+            raise TypeError("custom_subs_json template must return a dictionary")
+
+    for key, val in template.items():
+        if val == "{subs}":
+            return key
+
+    raise ValueError("{subs} placeholder not found in custom_subs_json")
+
 connections = set()
 
 async def handler(websocket: websockets.ServerConnection) -> None:
@@ -49,7 +62,12 @@ def send_subs(name: str, value: str) -> None:
     if not value:
         return
     if connections:
-        temp = custom_subs_json.replace("{subs}", value) if custom_subs_json is not None else value
+        if template and template_subs_key:
+            template[template_subs_key] = value
+            temp = json.dumps(template)
+        else:
+            temp = value
+
         loop.call_soon_threadsafe(mpvQ.put_nowait, temp)
 
 
@@ -79,8 +97,9 @@ mpv = MPV(start_mpv=False, ipc_socket=SOCKET)
 
 if custom_subs_json is not None:
     try:
-        json.loads(custom_subs_json)
-    except json.JSONDecodeError:
+        template = json.loads(custom_subs_json)
+        template_subs_key = get_template_key(template)
+    except (json.JSONDecodeError, TypeError, ValueError):
         print(f"Custom JSON schema '{custom_subs_json}' is not valid", flush=True)
         mpv.show_text(f"Custom JSON schema '{custom_subs_json}' is not valid")
         time.sleep(5)
