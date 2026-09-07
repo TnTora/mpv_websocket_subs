@@ -122,7 +122,7 @@ async def main() -> None:
     try:
         async with websockets.serve(handler, "localhost", PORT):
 
-            mpv.show_text("WS_subs started. Connect from browser.", 60000)
+            mpv.show_text("WS_subs started. Connect from client.", 60000)
             # mpvQ = asyncio.Queue()
             # main_task = asyncio.create_task(monitorQ(mpvQ))
             main_task = asyncio.gather(monitorQ(mpvQ), check_connection())
