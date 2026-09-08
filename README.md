@@ -6,6 +6,10 @@ mpv script to send subtitles via a websocket server. Useful to send subs to a te
 
 
 
+https://github.com/user-attachments/assets/3b24568a-e93f-41a3-b3b9-e73c3d4a620c
+
+
+
 ## Installation
 
 Locate your mpv config folder. It is typically found at `~/.config/mpv/` on Linux/MacOS and `C:\users\USERNAME\AppData\Roaming\mpv\` on Windows.  [Files section](https://mpv.io/manual/master/#files) in mpv's manual for more info. I will refer to the path of this folder as `<mpv config directory>` for the rest of this file.
